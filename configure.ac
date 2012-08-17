@@ -79,17 +79,9 @@ linux)
 	AC_DEFINE(OS_LINUX, 1, [Linux backend])
 	AC_SUBST(OS_LINUX)
 	AC_CHECK_LIB(rt, clock_gettime, PC_LIBS_PRIVATE="-lrt")
+	AC_CHECK_LIB(pthread, pthread_create, [PC_LIBS_PRIVATE="${PC_LIBS_PRIVATE} -pthread"; THREAD_CFLAGS="-pthread"], THREAD_CFLAGS="")
 	threads="posix"
 
-	case $host in
-	*-linux-androideabi)
-		THREAD_CFLAGS=""
-		;;
-	*)
-		THREAD_CFLAGS="-pthread"
-	esac
-
-	PC_LIBS_PRIVATE="${PC_LIBS_PRIVATE} ${THREAD_CFLAGS}"
 	AC_CHECK_HEADERS([poll.h])
 	AC_DEFINE([POLL_NFDS_TYPE],[nfds_t],[type of second poll() argument])
 	;;
