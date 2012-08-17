@@ -31,6 +31,10 @@
 #include <sys/time.h>
 #endif
 
+#ifdef __ANDROID__
+#include <android/log.h>
+#endif
+
 #include "libusbi.h"
 
 #if defined(OS_LINUX)
@@ -1757,6 +1761,34 @@ void usbi_log_v(struct libusb_context *ctx, enum usbi_log_level level,
 	const char *prefix;
 	struct timeval now;
 	static struct timeval first = { 0, 0 };
+
+#ifdef __ANDROID__
+	android_LogPriority android_level;
+
+	switch (level) {
+	case LOG_LEVEL_INFO:
+		android_level = ANDROID_LOG_INFO;
+		break;
+	case LOG_LEVEL_WARNING:
+		android_level = ANDROID_LOG_WARN;
+		break;
+	case LOG_LEVEL_ERROR:
+		android_level = ANDROID_LOG_ERROR;
+		break;
+	case LOG_LEVEL_DEBUG:
+		android_level = ANDROID_LOG_DEBUG;
+		break;
+	default:
+		android_level = ANDROID_LOG_UNKNOWN;
+		break;
+	}
+
+	char android_tag[256]; /* ought to be enough */
+
+	sprintf(android_tag, "libusb(%s)", function);
+
+	__android_log_vprint(android_level, android_tag, format, args);
+#endif
 
 #ifndef ENABLE_DEBUG_LOGGING
 	USBI_GET_CONTEXT(ctx);

@@ -49,6 +49,8 @@ case $host in
 *-linux*)
 	AC_MSG_RESULT([Linux])
 	backend="linux"
+
+	AC_CHECK_DECL(__ANDROID__, android=true, android=false)
 	;;
 *-darwin*)
 	AC_MSG_RESULT([Darwin/Mac OS X])
@@ -156,6 +158,10 @@ else
 fi
 
 AC_CHECK_TYPES(struct timespec)
+
+if $android; then
+	AC_SEARCH_LIBS([__android_log_vprint], [log])
+fi
 
 # Message logging
 AC_ARG_ENABLE([log], [AS_HELP_STRING([--disable-log], [disable all logging])],
