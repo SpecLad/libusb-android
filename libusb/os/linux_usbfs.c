@@ -37,6 +37,10 @@
 #include "libusbi.h"
 #include "linux_usbfs.h"
 
+#if __ANDROID__
+#include "android_java.h"
+#endif
+
 /* sysfs vs usbfs:
  * opening a usbfs node causes the device to be resumed, so we attempt to
  * avoid this during enumeration.
@@ -1218,7 +1222,13 @@ static int op_open(struct libusb_device_handle *handle)
 
 	_get_usbfs_path(handle->dev, filename);
 	usbi_dbg("opening %s", filename);
+
+#if __ANDROID__
+	android_java_open(filename, &hpriv->fd);
+	if (hpriv->fd < 0) hpriv->fd = open(filename, O_RDWR);
+#else
 	hpriv->fd = open(filename, O_RDWR);
+#endif
 	if (hpriv->fd < 0) {
 		if (errno == EACCES) {
 			usbi_err(HANDLE_CTX(handle), "libusb couldn't open USB device %s: "

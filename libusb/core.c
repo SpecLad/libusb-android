@@ -1762,6 +1762,16 @@ void usbi_log_v(struct libusb_context *ctx, enum usbi_log_level level,
 	struct timeval now;
 	static struct timeval first = { 0, 0 };
 
+#ifndef ENABLE_DEBUG_LOGGING
+	USBI_GET_CONTEXT(ctx);
+	if (!ctx->debug)
+		return;
+	if (level == LOG_LEVEL_WARNING && ctx->debug < 2)
+		return;
+	if (level == LOG_LEVEL_INFO && ctx->debug < 3)
+		return;
+#endif
+
 #ifdef __ANDROID__
 	android_LogPriority android_level;
 
@@ -1785,19 +1795,9 @@ void usbi_log_v(struct libusb_context *ctx, enum usbi_log_level level,
 
 	char android_tag[256]; /* ought to be enough */
 
-	sprintf(android_tag, "libusb(%s)", function);
+	snprintf(android_tag, sizeof android_tag, "libusb(%s)", function);
 
 	__android_log_vprint(android_level, android_tag, format, args);
-#endif
-
-#ifndef ENABLE_DEBUG_LOGGING
-	USBI_GET_CONTEXT(ctx);
-	if (!ctx->debug)
-		return;
-	if (level == LOG_LEVEL_WARNING && ctx->debug < 2)
-		return;
-	if (level == LOG_LEVEL_INFO && ctx->debug < 3)
-		return;
 #endif
 
 	usbi_gettimeofday(&now, NULL);

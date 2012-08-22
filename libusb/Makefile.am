@@ -37,12 +37,18 @@ else
 THREADS_SRC = os/threads_windows.h os/threads_windows.c
 endif
 
+if ANDROID
+ANDROID_JAVA_SRC = os/android_java.c
+else
+ANDROID_JAVA_SRC =
+endif
+
 libusb_1_0_la_CFLAGS = $(VISIBILITY_CFLAGS) $(AM_CFLAGS) $(THREAD_CFLAGS) \
 	-DLIBUSB_DESCRIBE=\"`git --git-dir "$(top_srcdir)/.git" describe --tags 2>/dev/null`\"
 libusb_1_0_la_LDFLAGS = $(LTLDFLAGS)
 libusb_1_0_la_SOURCES = libusbi.h core.c descriptor.c io.c sync.c $(OS_SRC) \
 	os/linux_usbfs.h os/darwin_usb.h os/windows_usb.h \
-	$(THREADS_SRC) \
+	$(THREADS_SRC) $(ANDROID_JAVA_SRC) \
 	os/poll_posix.h os/poll_windows.h
 
 hdrdir = $(includedir)/libusb-1.0
