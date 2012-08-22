@@ -17,15 +17,6 @@ LU_DEFINE_VERSION_RC_ATOM([LIBUSB_RC])
 
 AC_INIT([libusb], LIBUSB_MAJOR[.]LIBUSB_MINOR[.]LIBUSB_MICRO[]LIBUSB_RC, [libusb-devel@lists.sourceforge.net], [libusb], [http://www.libusb.org/])
 
-# Library versioning
-# These numbers should be tweaked on every release. Read carefully:
-# http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
-# http://sourceware.org/autobook/autobook/autobook_91.html
-lt_current="1"
-lt_revision="0"
-lt_age="1"
-LTLDFLAGS="-version-info ${lt_current}:${lt_revision}:${lt_age}"
-
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
@@ -41,8 +32,6 @@ LT_LANG([Windows Resource])
 AC_C_INLINE
 AM_PROG_CC_C_O
 AC_DEFINE([_GNU_SOURCE], 1, [Use GNU extensions])
-
-LTLDFLAGS="${LTLDFLAGS} -no-undefined"
 
 AC_MSG_CHECKING([operating system])
 case $host in
@@ -76,6 +65,22 @@ case $host in
 *)
 	AC_MSG_ERROR([unsupported operating system])
 esac
+
+if $android; then
+LTLDFLAGS="-avoid-version"
+else
+# Library versioning
+# These numbers should be tweaked on every release. Read carefully:
+# http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# http://sourceware.org/autobook/autobook/autobook_91.html
+lt_current="1"
+lt_revision="0"
+lt_age="1"
+LTLDFLAGS="-version-info ${lt_current}:${lt_revision}:${lt_age}"
+fi
+
+LTLDFLAGS="${LTLDFLAGS} -no-undefined"
+
 case $backend in
 linux)
 	AC_DEFINE(OS_LINUX, 1, [Linux backend])
@@ -128,6 +133,7 @@ AM_CONDITIONAL(THREADS_POSIX, test "x$threads" = xposix)
 if test "$threads" = posix; then
 	AC_DEFINE(THREADS_POSIX, 1, [Use POSIX Threads])
 fi
+AM_CONDITIONAL(ANDROID, $android)
 
 # timerfd
 AC_CHECK_HEADER([sys/timerfd.h], [timerfd_h=1], [timerfd_h=0])
