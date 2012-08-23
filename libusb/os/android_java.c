@@ -11,6 +11,7 @@ static jmethodID java_lang_Throwable_toString;
 
 static jclass android_hardware_usb_UsbDeviceConnection = NULL;
 static jmethodID android_hardware_usb_UsbDeviceConnection_getFileDescriptor;
+static jmethodID android_hardware_usb_UsbDeviceConnection_close;
 
 static jclass org_libusb_UsbHelper = NULL;
 static jmethodID org_libusb_UsbHelper_openDevice;
@@ -60,6 +61,10 @@ JNIEXPORT jint JNI_OnLoad(JavaVM *vm, void * reserved)
 		"getFileDescriptor", "()I");
 	if (!android_hardware_usb_UsbDeviceConnection_getFileDescriptor) goto cleanup;
 
+	android_hardware_usb_UsbDeviceConnection_close = (*env)->GetMethodID(env, android_hardware_usb_UsbDeviceConnection,
+		"close", "()V");
+	if (!android_hardware_usb_UsbDeviceConnection_close) goto cleanup;
+
 	clazz = (*env)->FindClass(env, "org/libusb/UsbHelper");
 	if (!clazz) goto cleanup;
 	org_libusb_UsbHelper = (*env)->NewGlobalRef(env, clazz);
@@ -100,9 +105,12 @@ JNIEXPORT void JNI_OnUnload(JavaVM* vm, void* reserved)
 	usbi_dbg("unloaded from JVM");
 }
 
-void android_java_open(const char * path, int * fd)
+void android_java_open(struct libusb_context * ctx, const char * path, int * fd, jobject * connection)
 {
 	*fd = -1;
+	*connection = NULL;
+	bool success = false;
+
 	if (!java_vm) return;
 
 	JNIEnv * env;
@@ -116,6 +124,70 @@ void android_java_open(const char * path, int * fd)
 	} else {
 		env = void_env;
 	}
+
+	jstring path_string = (*env)->NewStringUTF(env, path);
+
+	jobject connection_local = (*env)->CallStaticObjectMethod(env, org_libusb_UsbHelper, org_libusb_UsbHelper_openDevice, path_string);
+	if ((*env)->ExceptionCheck(env)) goto cleanup;
+
+	if (!connection_local) {
+		usbi_err(ctx, "couldn't open device via Java API");
+		goto cleanup;
+	}
+
+	*connection = (*env)->NewGlobalRef(env, connection_local);
+
+	*fd = (*env)->CallIntMethod(env, *connection, android_hardware_usb_UsbDeviceConnection_getFileDescriptor);
+	if ((*env)->ExceptionCheck(env)) goto cleanup;
+
+	success = true;
+
+cleanup:
+
+	if (!success) {
+		jthrowable exception;
+		if ((exception = (*env)->ExceptionOccurred(env))) {
+			(*env)->ExceptionClear(env);
+			log_exception(env, exception, ctx, __func__);
+		}
+
+		*fd = -1;
+		if (*connection) {
+			(*env)->DeleteGlobalRef(env, connection);
+			*connection = NULL;
+		}
+	}
+
+	if (had_to_attach) {
+		(*java_vm)->DetachCurrentThread(java_vm);
+	}
+}
+
+void android_java_close(struct libusb_context * ctx, jobject connection)
+{
+	if (!java_vm) return;
+
+	JNIEnv * env;
+	void * void_env;
+	bool had_to_attach = false;
+	jint status = (*java_vm)->GetEnv(java_vm, &void_env, JNI_VERSION_1_6);
+
+	if (status == JNI_EDETACHED) {
+		(*java_vm)->AttachCurrentThread(java_vm, &env, NULL);
+		had_to_attach = true;
+	} else {
+		env = void_env;
+	}
+
+	(*env)->CallVoidMethod(env, connection, android_hardware_usb_UsbDeviceConnection_close);
+
+	jthrowable exception;
+	if ((exception = (*env)->ExceptionOccurred(env))) {
+		(*env)->ExceptionClear(env);
+		log_exception(env, exception, NULL, __func__);
+	}
+
+	(*env)->DeleteGlobalRef(env, connection);
 
 	if (had_to_attach) {
 		(*java_vm)->DetachCurrentThread(java_vm);

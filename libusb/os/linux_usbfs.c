@@ -38,6 +38,7 @@
 #include "linux_usbfs.h"
 
 #if __ANDROID__
+#include <jni.h>
 #include "android_java.h"
 #endif
 
@@ -120,6 +121,9 @@ struct linux_device_priv {
 
 struct linux_device_handle_priv {
 	int fd;
+#if __ANDROID__
+	jobject connection;
+#endif
 };
 
 enum reap_action {
@@ -1224,7 +1228,7 @@ static int op_open(struct libusb_device_handle *handle)
 	usbi_dbg("opening %s", filename);
 
 #if __ANDROID__
-	android_java_open(filename, &hpriv->fd);
+	android_java_open(HANDLE_CTX(handle), filename, &hpriv->fd, &hpriv->connection);
 	if (hpriv->fd < 0) hpriv->fd = open(filename, O_RDWR);
 #else
 	hpriv->fd = open(filename, O_RDWR);
@@ -1252,9 +1256,16 @@ static int op_open(struct libusb_device_handle *handle)
 
 static void op_close(struct libusb_device_handle *dev_handle)
 {
-	int fd = _device_handle_priv(dev_handle)->fd;
-	usbi_remove_pollfd(HANDLE_CTX(dev_handle), fd);
-	close(fd);
+	struct linux_device_handle_priv *hpriv = _device_handle_priv(dev_handle);
+
+	usbi_remove_pollfd(HANDLE_CTX(dev_handle), hpriv->fd);
+
+#ifdef __ANDROID__
+	if (hpriv->connection) android_java_close(HANDLE_CTX(dev_handle), hpriv->connection);
+	else close(hpriv->fd);
+#else
+	close(hpriv->fd);
+#endif
 }
 
 static int op_get_configuration(struct libusb_device_handle *handle,
