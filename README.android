@@ -1,0 +1,63 @@
+Overview
+========
+
+This version of libusb has been modified to work on Android. Besides some build
+changes, the buggest addition is that libusb now tries to use Android's Java
+USB host API to open the the devices, which means it will be able to
+successfully open them, even if the application is running as non-root (which
+they usually do).
+
+This modification is not perfect, read the Caveats section before using it.
+
+Building and using
+==================
+
+To build libusb for Android, you use the usual configure/make machinery,
+however, there's a build script in the 'android' directory, which simplifies
+the job. To use it, prepare an Android standalone toolchain (see
+STANDALONE-TOOLCHAIN.html in Android NDK documentation for how to do this).
+
+Then, make sure arm-linux-androideabi-gcc is in your PATH, and do the following:
+
+  cd android
+  ./build.sh armeabi
+  ./build.sh armeabi-v7a
+
+This will build the libraries and place them into
+'android/ndk-modules/libusb-1.0'.
+
+If you're using ndk-build as your build system, you can use libusb by adding
+the 'android/ndk-modules' directory to your NDK_MODULE_PATH environment
+variable, and then appending:
+
+  $(call import-module,libusb-1.0)
+
+to your Android.mk file.
+
+Caveats
+=======
+
+For this version of libusb to work, several other requirements must be
+fulfilled:
+
+1) Include the org.libusb.UsbHelper class from the 'android/java' directory in
+   your application.
+
+2) Have an application class (see
+   <http://developer.android.com/reference/android/app/Application.html>).
+   In that class's onCreate(), put the following line:
+
+     UsbHelper.useContext(getApplicationContext());
+
+3) You must load libusb into the JVM before using it (for example, in the
+   application class):
+
+     System.loadLibrary("usb-1.0")
+
+4) Beware: libusb will open a USB device if the application's user has given
+   permission to do so; however, it will not ask for that permission! It is
+   impossible for it to do so, since libusb_open is synchronous, and
+   android.hardware.usb.UsbManager.requestPermission is not. You must request
+   this permission yourself; see
+   <http://developer.android.com/guide/topics/connectivity/usb/host.html#permission-d>
+   for details.
