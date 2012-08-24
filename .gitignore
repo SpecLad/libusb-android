@@ -37,3 +37,6 @@ doc/html
 Debug
 Release
 *.user
+android/build-*
+android/ndk-modules/libusb-1.0/include
+android/ndk-modules/libusb-1.0/lib
