@@ -37,7 +37,7 @@
 #include "libusbi.h"
 #include "linux_usbfs.h"
 
-#if __ANDROID__
+#ifdef __ANDROID__
 #include <jni.h>
 #include "android_java.h"
 #endif
@@ -121,7 +121,7 @@ struct linux_device_priv {
 
 struct linux_device_handle_priv {
 	int fd;
-#if __ANDROID__
+#ifdef __ANDROID__
 	jobject connection;
 #endif
 };
@@ -1227,7 +1227,7 @@ static int op_open(struct libusb_device_handle *handle)
 	_get_usbfs_path(handle->dev, filename);
 	usbi_dbg("opening %s", filename);
 
-#if __ANDROID__
+#ifdef __ANDROID__
 	android_java_open(HANDLE_CTX(handle), filename, &hpriv->fd, &hpriv->connection);
 	if (hpriv->fd < 0) hpriv->fd = open(filename, O_RDWR);
 #else
