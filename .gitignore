@@ -40,3 +40,5 @@ Release
 android/build-*
 android/ndk-modules/libusb-1.0/include
 android/ndk-modules/libusb-1.0/lib
+android/LibusbSupport/gen
+android/LibusbSupport/proguard-project.txt
