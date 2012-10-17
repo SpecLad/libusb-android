@@ -40,8 +40,9 @@ Caveats
 For this version of libusb to work, several other requirements must be
 fulfilled:
 
-1) Include the org.libusb.UsbHelper class from the 'android/java' directory in
-   your application.
+1) Include the org.libusb.UsbHelper class from the 'android/LibusbSupport'
+   directory in your application. The directory is also usable as an Android
+   library project.
 
 2) Have an application class (see
    <http://developer.android.com/reference/android/app/Application.html>).
