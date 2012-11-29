@@ -24,8 +24,8 @@ armeabi)
   ;;
 armeabi-v7a)
   host=arm-linux-androideabi
-  cflags="$cflags -mthumb -march=armv7-a -mfloat-abi=softfp"
-  ldflags="-Wl,--fix-cortex-a8 -Wl,--no-undefined"
+  cflags="$cflags -mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
+  ldflags="-march=armv7-a -Wl,--fix-cortex-a8 -Wl,--no-undefined"
   ;;
 *)
   echo "Unsupported architecture: $arch"
