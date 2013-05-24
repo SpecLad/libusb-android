@@ -4,7 +4,7 @@ set -e
 dir=$(dirname "$0")
 
 if [ $# -ne 1 ]; then
-  echo "Usage: $0 (armeabi | armeabi-v7a)"
+  echo "Usage: $0 (armeabi | armeabi-v7a | mips | x86)"
   exit 1
 fi
 
@@ -20,12 +20,20 @@ case $arch in
 armeabi)
   host=arm-linux-androideabi
   cflags="$cflags -mthumb"
-  ldflags="-Wl,--fix-cortex-a8 -Wl,--no-undefined"
+  ldflags="-Wl,--no-undefined"
   ;;
 armeabi-v7a)
   host=arm-linux-androideabi
   cflags="$cflags -mthumb -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16"
   ldflags="-march=armv7-a -Wl,--fix-cortex-a8 -Wl,--no-undefined"
+  ;;
+mips)
+  host=mipsel-linux-android
+  ldflags=""
+  ;;
+x86)
+  host=i686-linux-android
+  ldflags=""
   ;;
 *)
   echo "Unsupported architecture: $arch"

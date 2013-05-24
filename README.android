@@ -14,14 +14,24 @@ Building and using
 
 To build libusb for Android, you use the usual configure/make machinery,
 however, there's a build script in the 'android' directory, which simplifies
-the job. To use it, prepare an Android standalone toolchain (see
-STANDALONE-TOOLCHAIN.html in Android NDK documentation for how to do this).
+the job. To use it, prepare Android standalone toolchains for the
+architectures that you want to build for (see STANDALONE-TOOLCHAIN.html
+in Android NDK documentation for how to do this).
 
-Then, make sure arm-linux-androideabi-gcc is in your PATH, and do the following:
+Run the autogen script in the source root to prepare the necessary files.
+Afterwards, you can run "make distclean" to remove files you won't need.
 
-  cd android
+Then, make sure the cross-compilers (e.g. arm-linux-androideabi-gcc)
+are in your PATH, and run build.sh in the 'android' directory one or more
+times, passing it the name of the architecture to build for, e.g.:
+
   ./build.sh armeabi
   ./build.sh armeabi-v7a
+  ./build.sh mips
+  ./build.sh x86
+
+Naturally, you don't need to run the script for all available architectures,
+but only for those you want to build for.
 
 This will build the libraries and place them into
 'android/ndk-modules/libusb-1.0'.
